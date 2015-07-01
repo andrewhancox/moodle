@@ -3033,6 +3033,7 @@ class assign {
             }
             $showedit = $this->submissions_open($userid) && ($this->is_any_submission_plugin_enabled());
             $viewfullnames = has_capability('moodle/site:viewfullnames', $this->get_course_context());
+            $usergroups = groups_get_all_groups($this->get_course()->id, $userid);
 
             $submissionstatus = new assign_submission_status($instance->allowsubmissionsfromdate,
                                                              $instance->alwaysshowdescription,
@@ -3062,7 +3063,8 @@ class assign {
                                                              $instance->attemptreopenmethod,
                                                              $instance->maxattempts,
                                                              $this->get_grading_status($userid),
-                                                             $instance->preventsubmissionnotingroup);
+                                                             $instance->preventsubmissionnotingroup,
+                                                             $usergroups);
             $o .= $this->get_renderer()->render($submissionstatus);
         }
 
@@ -3939,6 +3941,7 @@ class assign {
             $viewfullnames = has_capability('moodle/site:viewfullnames', $this->get_course_context());
 
             $gradingstatus = $this->get_grading_status($user->id);
+            $usergroups = groups_get_all_groups($this->get_course()->id, $user->id);
             $submissionstatus = new assign_submission_status($instance->allowsubmissionsfromdate,
                                                               $instance->alwaysshowdescription,
                                                               $submission,
@@ -3967,7 +3970,8 @@ class assign {
                                                               $instance->attemptreopenmethod,
                                                               $instance->maxattempts,
                                                               $gradingstatus,
-                                                              $instance->preventsubmissionnotingroup);
+                                                              $instance->preventsubmissionnotingroup,
+                                                              $usergroups);
             if (has_capability('mod/assign:submit', $this->get_context(), $user)) {
                 $o .= $this->get_renderer()->render($submissionstatus);
             }
