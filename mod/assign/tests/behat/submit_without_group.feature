@@ -1,4 +1,4 @@
-@mod @mod_assign @wip
+@mod @mod_assign
 Feature: Submit assignment without group
   As a teacher
   I should be able to prevent students submitting team assignments as members of the default group
@@ -105,8 +105,8 @@ Feature: Submit assignment without group
     And I should see "0" in the "Groups" "table_row"
     And I should see "The setting 'Require group to make submission' is turned on and some users are not allocated to groups or are allocated to multiple groups, this will prevent them from submitting assignments."
     And I follow "View/grade all submissions"
-    And I should see "Default group" in the "Student 1" "table_row"
-    And I should see "Default group" in the "Student 2" "table_row"
+    And I should see "Not member of a group – Unable to make submissions" in the "Student 1" "table_row"
+    And I should see "Not member of a group – Unable to make submissions" in the "Student 2" "table_row"
     And I should not see "Submitted for grading" in the "Student 1" "table_row"
     And I should not see "Submitted for grading" in the "Student 2" "table_row"
     And I am on homepage
@@ -128,6 +128,8 @@ Feature: Submit assignment without group
     And I should not see "Add submission"
     And I log out
     And I log in as "teacher1"
-    And I follow "Course 1"
+    And I follow "Course 3"
     And I follow "Require group membership"
     And I should see "The setting 'Require group to make submission' is turned on and some users are not allocated to groups or are allocated to multiple groups, this will prevent them from submitting assignments."
+    And I follow "View/grade all submissions"
+    And I should see "Member of more than one group – Unable to make submissions" in the "Student 3" "table_row"

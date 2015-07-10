@@ -637,6 +637,13 @@ class assign_grading_table extends table_sql implements renderable {
         $this->get_group_and_submission($row->id, $group, $submission, -1);
         if ($group) {
             return $group->name;
+        } else if ($this->assignment->get_instance()->preventsubmissionnotingroup) {
+            $usergroups = groups_get_all_groups($this->assignment->get_course()->id, $row->id);
+            if (count($usergroups) == 0) {
+                return get_string('noteamgrader', 'assign');
+            } else if (count($usergroups) > 1) {
+                return get_string('multipleteamsgrader', 'assign');
+            }
         }
         return get_string('defaultteam', 'assign');
     }
