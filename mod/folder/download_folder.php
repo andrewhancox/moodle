@@ -37,9 +37,7 @@ require_capability('mod/folder:view', $context);
 
 $folder = $DB->get_record('folder', array('id' => $cm->instance), '*', MUST_EXIST);
 
-// Completion.
-$completion = new completion_info($course);
-$completion->set_module_viewed($cm);
+folder_downloaded($folder, $course, $cm, $context);
 
 $filename = clean_filename($course->shortname . "_" . $folder->name . "-" . date("Ymd"));
 
