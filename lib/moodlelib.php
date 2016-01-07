@@ -535,6 +535,10 @@ define('EMAIL_VIA_ALWAYS', 1);
  */
 define('EMAIL_VIA_NO_REPLY_ONLY', 2);
 
+define('SITEPOLICY_NONE', 0);
+define('SITEPOLICY_EXTERNALURL', 1);
+define('SITEPOLICY_TEXT', 2);
+
 // PARAMETER HANDLING.
 
 /**
@@ -2701,17 +2705,29 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
 
     // Check that the user has agreed to a site policy if there is one - do not test in case of admins.
     if (!$USER->policyagreed and !is_siteadmin()) {
-        if (!empty($CFG->sitepolicy) and !isguestuser()) {
+        if (isguestuser()) {
+            $sitepolicyurl = get_config('core', 'sitepolicyguest');
+            $sitepolicytext = get_config('core', 'sitepolicyguest_text');
+            $sitesitepolicysource = get_config('core', 'sitepolicysourceguest');
+        } else {
+            $sitepolicyurl = get_config('core', 'sitepolicy');
+            $sitepolicytext = get_config('core', 'sitepolicy_text');
+            $sitesitepolicysource = get_config('core', 'sitepolicysourceloggedin');
+        }
+        switch ($sitesitepolicysource) {
+            case SITEPOLICY_NONE:
+                $redirecttopolicy = false;
+                break;
+            case SITEPOLICY_EXTERNALURL:
+                $redirecttopolicy = !empty($sitepolicyurl);
+                break;
+            case SITEPOLICY_TEXT:
+                $redirecttopolicy = !empty($sitepolicytext);
+                break;
+        }
+        if ($redirecttopolicy) {
             if ($preventredirect) {
-                throw new moodle_exception('sitepolicynotagreed', 'error', '', $CFG->sitepolicy);
-            }
-            if ($setwantsurltome) {
-                $SESSION->wantsurl = qualified_me();
-            }
-            redirect($CFG->wwwroot .'/user/policy.php');
-        } else if (!empty($CFG->sitepolicyguest) and isguestuser()) {
-            if ($preventredirect) {
-                throw new moodle_exception('sitepolicynotagreed', 'error', '', $CFG->sitepolicyguest);
+                throw new require_login_exception('Policy not agreed');
             }
             if ($setwantsurltome) {
                 $SESSION->wantsurl = qualified_me();
