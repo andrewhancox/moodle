@@ -618,9 +618,12 @@ class block_manager {
                     bi.subpagepattern,
                     bi.defaultregion,
                     bi.defaultweight,
-                    COALESCE(bp.visible, 1) AS visible,
-                    COALESCE(bp.region, bi.defaultregion) AS region,
-                    COALESCE(bp.weight, bi.defaultweight) AS weight,
+                    bi.locked,
+                    bp.visible,
+                    bp.region,
+                    bi.defaultregion,
+                    bp.weight,
+                    bi.defaultweight,
                     bi.configdata
                     $ccselect
 
@@ -640,20 +643,28 @@ class block_manager {
                 AND b.visible = 1
 
                 ORDER BY
-                    COALESCE(bp.region, bi.defaultregion),
-                    COALESCE(bp.weight, bi.defaultweight),
                     bi.id";
         $blockinstances = $DB->get_recordset_sql($sql, $params + $parentcontextparams + $pagetypepatternparams);
 
         $this->birecordsbyregion = $this->prepare_per_region_arrays();
         $unknown = array();
         foreach ($blockinstances as $bi) {
+            if ($bi->locked || empty($bi->blockpositionid)) {
+                $bi->weight = $bi->defaultweight;
+                $bi->region = $bi->defaultregion;
+                $bi->visible = true;
+            }
+
             context_helper::preload_from_record($bi);
             if ($this->is_known_region($bi->region)) {
                 $this->birecordsbyregion[$bi->region][] = $bi;
             } else {
                 $unknown[] = $bi;
             }
+        }
+
+        foreach ($this->birecordsbyregion as &$region) {
+            usort($region, array($this, 'sort_blocks'));
         }
 
         // Pages don't necessarily have a defaultregion. The  one time this can
@@ -663,6 +674,16 @@ class block_manager {
             $this->birecordsbyregion[$this->defaultregion] =
                     array_merge($this->birecordsbyregion[$this->defaultregion], $unknown);
         }
+    }
+
+    /**
+     * Function to sort a list of blocks.
+     * @param stdClass $a A block
+     * @param stdClass $b Another block
+     * @return int
+     */
+    public function sort_blocks($a, $b) {
+        return $a->weight - $b->weight;
     }
 
     /**
@@ -969,14 +990,42 @@ class block_manager {
             }
         }
 
+        $waslastblocklocked = false;
+        $maxweight = self::MAX_WEIGHT;
+        $minweight = -self::MAX_WEIGHT;
+        foreach ($instances as $bi) {
+            if ($bi->instance->weight > $maxweight) {
+                $maxweight = $bi->instance->weight;
+            }
+            if ($bi->instance->weight < $minweight) {
+                $minweight = $bi->instance->weight;
+            }
+        }
+
+        $lockedbelow = false;
         foreach ($instances as $instance) {
             $content = $instance->get_content_for_output($output);
             if (empty($content)) {
                 continue;
             }
 
+            $lockedabove = false;
+            $lockedbelow = false;
+            // If moving to the top and the top block is already locked then return false.
+            if ($instance->instance->weight == $minweight && $instance->instance->locked) {
+                $lockedabove = true;
+            }
+            // If moving to the bottom and the top block is already locked then return false.
+            if ($instance->instance->weight == $maxweight && $instance->instance->locked) {
+                $lockedbelow = true;
+            }
+            // If moving between.
+            if ($waslastblocklocked && $instance->instance->locked && $lastweight - $instance->instance->weight == -1) {
+                $lockedabove = true;
+            }
+
             if ($this->movingblock && $lastweight != $instance->instance->weight &&
-                    $content->blockinstanceid != $this->movingblock && $lastblock != $this->movingblock) {
+                    $content->blockinstanceid != $this->movingblock && $lastblock != $this->movingblock && !$lockedabove) {
                 $results[] = new block_move_target($this->get_move_target_url($region, ($lastweight + $instance->instance->weight)/2));
             }
 
@@ -989,9 +1038,10 @@ class block_manager {
             $results[] = $content;
             $lastweight = $instance->instance->weight;
             $lastblock = $instance->instance->id;
+            $waslastblocklocked = $instance->instance->locked;
         }
 
-        if ($this->movingblock && $lastblock != $this->movingblock) {
+        if ($this->movingblock && $lastblock != $this->movingblock && !$lockedbelow) {
             $results[] = new block_move_target($this->get_move_target_url($region, $lastweight + 1));
         }
         return $results;
@@ -1052,7 +1102,7 @@ class block_manager {
             $blocktitle = $block->arialabel;
         }
 
-        if ($this->page->user_can_edit_blocks()) {
+        if ($this->page->user_can_edit_blocks() && !$block->instance->locked) {
             // Move icon.
             $str = new lang_string('moveblock', 'block', $blocktitle);
             $controls[] = new action_menu_link_primary(
@@ -1443,6 +1493,7 @@ class block_manager {
 
             $bi->defaultregion = $data->bui_defaultregion;
             $bi->defaultweight = $data->bui_defaultweight;
+            $bi->locked = $data->bui_locked;
             $DB->update_record('block_instances', $bi);
 
             if (!empty($block->config)) {
@@ -1607,6 +1658,40 @@ class block_manager {
             $bestgap = self::MAX_WEIGHT + 1;
             while (!empty($usedweights[$bestgap])) {
                 $bestgap++;
+            }
+        }
+
+        // If moving to the top and the top block is already locked then return false.
+        if (isset($usedweights[$maxweight][0])) {
+            $lastblock = end($blocks);
+            if ($newweight >= $maxweight && $lastblock->locked) {
+                return false;
+            }
+        }
+        // If moving to the bottom and the bottom block is already locked then return false.
+        if (isset($usedweights[$minweight][0])) {
+            $firstblock = $blocks[0];
+            if ($newweight <= $minweight && $firstblock->locked) {
+                return false;
+            }
+        }
+        // If moving between two locked blocks then return false.
+        if (isset($usedweights[floor($newweight)][0]) && isset($usedweights[ceil($newweight)][0])) {
+            foreach ($blocks as $block) {
+                if ($block->id == $usedweights[floor($newweight)][0]) {
+                    $top = $block;
+                }
+                if ($block->id == $usedweights[ceil($newweight)][0]) {
+                    $bottom = $block;
+                }
+            }
+
+            if ($top->locked && $bottom->locked) {
+                return false;
+            } else if ($top->locked) {
+                $newweight = ceil($newweight);
+            } else if ($bottom->locked) {
+                $newweight = floor($newweight);
             }
         }
 

@@ -2575,6 +2575,7 @@ class block_contents {
      */
     public $controls = array();
 
+    public $locked = false;
 
     /**
      * Create new instance of block content

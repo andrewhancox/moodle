@@ -1371,7 +1371,7 @@ class backup_block_instance_structure_step extends backup_structure_step {
 
         $block = new backup_nested_element('block', array('id', 'contextid', 'version'), array(
             'blockname', 'parentcontextid', 'showinsubcontexts', 'pagetypepattern',
-            'subpagepattern', 'defaultregion', 'defaultweight', 'configdata'));
+            'subpagepattern', 'defaultregion', 'defaultweight', 'configdata', 'locked'));
 
         $positions = new backup_nested_element('block_positions');
 

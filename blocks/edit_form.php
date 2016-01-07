@@ -228,6 +228,9 @@ class block_edit_form extends moodleform {
         $mform->addElement('select', 'bui_defaultweight', get_string('defaultweight', 'block'), $weightoptions);
         $mform->addHelpButton('bui_defaultweight', 'defaultweight', 'block');
 
+        $mform->addElement('selectyesno', 'bui_locked', get_string('locked', 'block'));
+        $mform->addHelpButton('bui_locked', 'locked', 'block');
+
         // Where this block is positioned on this page.
         $mform->addElement('header', 'onthispage', get_string('onthispage', 'block'));
 
@@ -245,8 +248,12 @@ class block_edit_form extends moodleform {
         if (!$this->block->user_can_edit()) {
             $mform->hardFreezeAllVisibleExcept($pagefields);
         }
-        if (!$this->page->user_can_edit_blocks()) {
+        if (!$this->page->user_can_edit_blocks() || $this->block->instance->locked) {
             $mform->hardFreeze($pagefields);
+        }
+
+        foreach ($pagefields as $field) {
+            $mform->disabledIf($field, 'bui_locked', 'eq', '1');
         }
 
         $this->add_action_buttons();
@@ -255,7 +262,7 @@ class block_edit_form extends moodleform {
     function set_data($defaults) {
         // Prefix bui_ on all the core field names.
         $blockfields = array('showinsubcontexts', 'pagetypepattern', 'subpagepattern', 'parentcontextid',
-                'defaultregion', 'defaultweight', 'visible', 'region', 'weight');
+                'defaultregion', 'defaultweight', 'visible', 'region', 'weight', 'locked');
         foreach ($blockfields as $field) {
             $newname = 'bui_' . $field;
             $defaults->$newname = $defaults->$field;
