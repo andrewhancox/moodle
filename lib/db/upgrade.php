@@ -1416,5 +1416,20 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2016021501.00);
     }
 
+    if ($oldversion < 2016011901.01) {
+
+        // Define field locked to be added to block_instances.
+        $table = new xmldb_table('block_instances');
+        $field = new xmldb_field('locked', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', 'configdata');
+
+        // Conditionally launch add field locked.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2016011901.01);
+    }
+
     return true;
 }

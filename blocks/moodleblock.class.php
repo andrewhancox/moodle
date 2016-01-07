@@ -226,6 +226,10 @@ class block_base {
         $bc->blockinstanceid = $this->instance->id;
         $bc->blockpositionid = $this->instance->blockpositionid;
 
+        if ($this->instance->locked) {
+            $bc->locked = true;
+        }
+
         if ($this->instance->visible) {
             $bc->content = $this->formatted_contents($output);
             if (!empty($this->content->footer)) {

@@ -37,6 +37,7 @@ $action = optional_param('action', '', PARAM_ALPHA);
 $buimoveid = optional_param('bui_moveid', 0, PARAM_INT);
 $buinewregion = optional_param('bui_newregion', '', PARAM_ALPHAEXT);
 $buibeforeid = optional_param('bui_beforeid', 0, PARAM_INT);
+$errortext = '';
 
 // Setting pagetype and URL.
 $PAGE->set_pagetype($pagetype);
@@ -120,7 +121,15 @@ switch ($action) {
         if (isset($buinewweight)) {
             // Nasty hack.
             $_POST['bui_newweight'] = $buinewweight;
-            $PAGE->blocks->process_url_move();
+            $success = $PAGE->blocks->process_url_move();
+            if (!$success) {
+                $errortext = 'locked';
+            }
         }
         break;
+}
+
+if (!empty($errortext)) {
+    $response = array('responseText' => array('error' => $errortext));
+    echo json_encode($response);
 }

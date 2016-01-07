@@ -1397,6 +1397,10 @@ class core_renderer extends renderer_base {
         }
 
 
+        if ($bc->locked) {
+            $bc->add_class('locked_block');
+        }
+
         if (empty($skiptitle)) {
             $output = '';
             $skipdest = '';
