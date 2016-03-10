@@ -83,8 +83,8 @@ class block_edit_form extends moodleform {
         $last = end($weightoptions);
         $weightoptions[$last] = get_string('bracketlast', 'block', $last);
 
-        $regionoptions = $this->page->theme->get_all_block_regions();
-        foreach ($this->page->blocks->get_regions() as $region) {
+        $regionoptions = $this->page->theme->get_all_block_regions(true);
+        foreach ($this->page->blocks->get_regions(true) as $region) {
             // Make sure to add all custom regions of this particular page too.
             if (!isset($regionoptions[$region])) {
                 $regionoptions[$region] = $region;
@@ -221,6 +221,7 @@ class block_edit_form extends moodleform {
         $defaultregion = $this->block->instance->defaultregion;
         if (!array_key_exists($defaultregion, $defaultregionoptions)) {
             $defaultregionoptions[$defaultregion] = $defaultregion;
+            $freezeregions = true;
         }
         $mform->addElement('select', 'bui_defaultregion', get_string('defaultregion', 'block'), $defaultregionoptions);
         $mform->addHelpButton('bui_defaultregion', 'defaultregion', 'block');
@@ -239,6 +240,7 @@ class block_edit_form extends moodleform {
         $blockregion = $this->block->instance->region;
         if (!array_key_exists($blockregion, $regionoptions)) {
             $regionoptions[$blockregion] = $blockregion;
+            $freezeregions = true;
         }
         $mform->addElement('select', 'bui_region', get_string('region', 'block'), $regionoptions);
 
@@ -254,6 +256,11 @@ class block_edit_form extends moodleform {
 
         foreach ($pagefields as $field) {
             $mform->disabledIf($field, 'bui_locked', 'eq', '1');
+        }
+
+        if (isset($freezeregions)) {
+            $mform->hardFreeze('bui_region');
+            $mform->hardFreeze('bui_defaultregion');
         }
 
         $this->add_action_buttons();

@@ -422,6 +422,8 @@ class theme_config {
      */
     public $blockrendermethod = null;
 
+    public $restrictedzones = null;
+
     /**
      * Load the config.php file for a particular theme, and return an instance
      * of this class. (That is, this is a factory method.)
@@ -493,7 +495,8 @@ class theme_config {
             'layouts', 'enable_dock', 'enablecourseajax', 'supportscssoptimisation',
             'rendererfactory', 'csspostprocess', 'editor_sheets', 'rarrow', 'larrow', 'uarrow',
             'hidefromselector', 'doctype', 'yuicssmodules', 'blockrtlmanipulations',
-            'lessfile', 'extralesscallback', 'lessvariablescallback', 'blockrendermethod');
+            'lessfile', 'extralesscallback', 'lessvariablescallback', 'blockrendermethod',
+            'restrictedzones');
 
         foreach ($config as $key=>$value) {
             if (in_array($key, $configurable)) {
@@ -1946,14 +1949,20 @@ class theme_config {
      *
      * @return array internal region name => human readable name.
      */
-    public function get_all_block_regions() {
+    public function get_all_block_regions($ignorelocked = false) {
         $regions = array();
         foreach ($this->layouts as $layoutinfo) {
             foreach ($layoutinfo['regions'] as $region) {
                 $regions[$region] = $this->get_region_name($region, $this->name);
             }
         }
-        return $regions;
+
+        $context = context_system::instance();
+        if ($ignorelocked && isset($this->restrictedzones) && !has_capability('moodle/site:manageblocksinrestrictedzones', $context)) {
+            return array_diff_key($regions, array_flip($this->restrictedzones));
+        } else {
+            return $regions;
+        }
     }
 
     /**

@@ -1396,8 +1396,12 @@ class core_renderer extends renderer_base {
             $bc->add_class('block_with_controls');
         }
 
+        $theme = $this->page->theme;
+        $inlockedregion = in_array($region, $theme->restrictedzones);
+        $context = context_system::instance();
+        $caneditrestricted = has_capability('moodle/site:manageblocksinrestrictedzones', $context);
 
-        if ($bc->locked) {
+        if (($inlockedregion && !$caneditrestricted) || $bc->locked) {
             $bc->add_class('locked_block');
         }
 

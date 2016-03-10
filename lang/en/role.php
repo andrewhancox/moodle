@@ -363,6 +363,7 @@ $string['site:doclinks'] = 'Show links to offsite docs';
 $string['site:forcelanguage'] = 'Override course language';
 $string['site:import'] = 'Import other courses into a course';
 $string['site:manageblocks'] = 'Manage blocks on a page';
+$string['site:manageblocksinrestrictedzones'] = 'Manage blocks within restricted zones';
 $string['site:mnetloginfromremote'] = 'Login from a remote application via MNet';
 $string['site:mnetlogintoremote'] = 'Roam to a remote application via MNet';
 $string['site:readallmessages'] = 'Read all messages on site';

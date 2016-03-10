@@ -90,6 +90,7 @@ class block_manager {
 
     /** @var array region name => 1.*/
     protected $regions = array();
+    protected $lockedregions = null;
 
     /** @var string the region where new blocks are added.*/
     protected $defaultregion = null;
@@ -164,13 +165,20 @@ class block_manager {
     /**
      * Get an array of all region names on this page where a block may appear
      *
+     * @param bool $ignorelocked - do not return locked regions
      * @return array the internal names of the regions on this page where block may appear.
      */
-    public function get_regions() {
+    public function get_regions($ignorelocked = false) {
         if (is_null($this->defaultregion)) {
             $this->page->initialise_theme_and_output();
         }
-        return array_keys($this->regions);
+
+        $context = context_system::instance();
+        if ($ignorelocked && !has_capability('moodle/site:manageblocksinrestrictedzones', $context)) {
+            return array_keys(array_diff_key( $this->regions, $this->get_lockedregions()));
+        } else {
+            return array_keys($this->regions);
+        }
     }
 
     /**
@@ -383,6 +391,7 @@ class block_manager {
     public function add_region($region, $custom = true) {
         global $SESSION;
         $this->check_not_yet_loaded();
+        $type = $this->page->pagetype;
         if ($custom) {
             if (array_key_exists($region, $this->regions)) {
                 // This here is EXACTLY why we should not be adding block regions into a page. It should
@@ -391,7 +400,6 @@ class block_manager {
             }
             // We need to register this custom region against the page type being used.
             // This allows us to check, when performing block actions, that unrecognised regions can be worked with.
-            $type = $this->page->pagetype;
             if (!isset($SESSION->custom_block_regions)) {
                 $SESSION->custom_block_regions = array($type => array($region));
             } else if (!isset($SESSION->custom_block_regions[$type])) {
@@ -401,6 +409,27 @@ class block_manager {
             }
         }
         $this->regions[$region] = 1;
+    }
+
+    public function get_lockedregions() {
+        if (isset($this->lockedregions)) {
+            return $this->lockedregions;
+        }
+        $this->lockedregions = array();
+
+        $page =  $this->page;
+        $theme = $page->theme;
+
+        foreach (array_keys($this->regions) as $region) {
+            if (isset($theme->restrictedzones) && in_array($region, $theme->restrictedzones)) {
+                $this->lockedregions[$region] = 1;
+            }
+            if (isset($theme->restrictedzones) && in_array($region, $theme->restrictedzones)) {
+                $this->lockedregions[$region] = 1;
+            }
+        }
+
+        return $this->lockedregions;
     }
 
     /**
@@ -1002,6 +1031,7 @@ class block_manager {
             }
         }
 
+        $regionlocked = in_array($region, $this->page->theme->restrictedzones);
         $lockedbelow = false;
         foreach ($instances as $instance) {
             $content = $instance->get_content_for_output($output);
@@ -1022,6 +1052,10 @@ class block_manager {
             // If moving between.
             if ($waslastblocklocked && $instance->instance->locked && $lastweight - $instance->instance->weight == -1) {
                 $lockedabove = true;
+            }
+            if ($regionlocked) {
+                $lockedabove = true;
+                $lockedbelow = true;
             }
 
             if ($this->movingblock && $lastweight != $instance->instance->weight &&
@@ -1102,7 +1136,12 @@ class block_manager {
             $blocktitle = $block->arialabel;
         }
 
-        if ($this->page->user_can_edit_blocks() && !$block->instance->locked) {
+        $lockedregions = $this->get_lockedregions();
+        $inlockedregion = key_exists($block->instance->region, $lockedregions);
+        $context = context_system::instance();
+        $caneditrestricted = has_capability('moodle/site:manageblocksinrestrictedzones', $context);
+
+        if ($this->page->user_can_edit_blocks() && !$block->instance->locked && (!$inlockedregion || $caneditrestricted)) {
             // Move icon.
             $str = new lang_string('moveblock', 'block', $blocktitle);
             $controls[] = new action_menu_link_primary(
@@ -1589,6 +1628,16 @@ class block_manager {
             // Don't have a valid target position yet, must be just starting the move.
             $this->movingblock = $blockid;
             $this->page->ensure_param_not_in_url('bui_moveid');
+            return false;
+        }
+
+        $theme = $this->page->theme;
+        $tolockedregion = in_array($newregion, $theme->restrictedzones);
+        $inlockedregion = in_array($block->instance->region, $theme->restrictedzones);
+        $context = context_system::instance();
+        $caneditrestricted = has_capability('moodle/site:manageblocksinrestrictedzones', $context);
+
+        if (($inlockedregion || $tolockedregion) && !$caneditrestricted) {
             return false;
         }
 

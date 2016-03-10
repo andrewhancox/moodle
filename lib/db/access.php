@@ -386,6 +386,11 @@ $capabilities = array(
         )
     ),
 
+    'moodle/site:manageblocksinrestrictedzones' => array(
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_SYSTEM
+    ),
+
     'moodle/site:accessallgroups' => array(
 
         'captype' => 'read',
