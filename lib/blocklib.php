@@ -174,7 +174,7 @@ class block_manager {
         }
 
         $context = context_system::instance();
-        if ($ignorelocked && !has_capability('moodle/site:manageblocksinrestrictedzones', $context)) {
+        if ($ignorelocked && !has_capability('moodle/site:manageblocksinrestrictedregions', $context)) {
             return array_keys(array_diff_key( $this->regions, $this->get_lockedregions()));
         } else {
             return array_keys($this->regions);
@@ -421,10 +421,10 @@ class block_manager {
         $theme = $page->theme;
 
         foreach (array_keys($this->regions) as $region) {
-            if (isset($theme->restrictedzones) && in_array($region, $theme->restrictedzones)) {
+            if (isset($theme->restrictedregions) && in_array($region, $theme->restrictedregions)) {
                 $this->lockedregions[$region] = 1;
             }
-            if (isset($theme->restrictedzones) && in_array($region, $theme->restrictedzones)) {
+            if (isset($theme->restrictedregions) && in_array($region, $theme->restrictedregions)) {
                 $this->lockedregions[$region] = 1;
             }
         }
@@ -1031,7 +1031,7 @@ class block_manager {
             }
         }
 
-        $regionlocked = in_array($region, $this->page->theme->restrictedzones);
+        $regionlocked = in_array($region, $this->page->theme->restrictedregions);
         $lockedbelow = false;
         foreach ($instances as $instance) {
             $content = $instance->get_content_for_output($output);
@@ -1139,7 +1139,7 @@ class block_manager {
         $lockedregions = $this->get_lockedregions();
         $inlockedregion = key_exists($block->instance->region, $lockedregions);
         $context = context_system::instance();
-        $caneditrestricted = has_capability('moodle/site:manageblocksinrestrictedzones', $context);
+        $caneditrestricted = has_capability('moodle/site:manageblocksinrestrictedregions', $context);
 
         if ($this->page->user_can_edit_blocks() && !$block->instance->locked && (!$inlockedregion || $caneditrestricted)) {
             // Move icon.
@@ -1632,10 +1632,10 @@ class block_manager {
         }
 
         $theme = $this->page->theme;
-        $tolockedregion = in_array($newregion, $theme->restrictedzones);
-        $inlockedregion = in_array($block->instance->region, $theme->restrictedzones);
+        $tolockedregion = in_array($newregion, $theme->restrictedregions);
+        $inlockedregion = in_array($block->instance->region, $theme->restrictedregions);
         $context = context_system::instance();
-        $caneditrestricted = has_capability('moodle/site:manageblocksinrestrictedzones', $context);
+        $caneditrestricted = has_capability('moodle/site:manageblocksinrestrictedregions', $context);
 
         if (($inlockedregion || $tolockedregion) && !$caneditrestricted) {
             return false;

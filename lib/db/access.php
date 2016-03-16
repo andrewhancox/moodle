@@ -386,7 +386,7 @@ $capabilities = array(
         )
     ),
 
-    'moodle/site:manageblocksinrestrictedzones' => array(
+    'moodle/site:manageblocksinrestrictedregions' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM
     ),

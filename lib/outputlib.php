@@ -422,7 +422,11 @@ class theme_config {
      */
     public $blockrendermethod = null;
 
-    public $restrictedzones = null;
+    /**
+     * @var array List of block regions which can only be edited by those with the
+     * moodle/site:manageblocksinrestrictedregions capability.
+     **/
+    public $restrictedregions = array();
 
     /**
      * Load the config.php file for a particular theme, and return an instance
@@ -496,7 +500,7 @@ class theme_config {
             'rendererfactory', 'csspostprocess', 'editor_sheets', 'rarrow', 'larrow', 'uarrow',
             'hidefromselector', 'doctype', 'yuicssmodules', 'blockrtlmanipulations',
             'lessfile', 'extralesscallback', 'lessvariablescallback', 'blockrendermethod',
-            'restrictedzones');
+            'restrictedregions');
 
         foreach ($config as $key=>$value) {
             if (in_array($key, $configurable)) {
@@ -1958,8 +1962,8 @@ class theme_config {
         }
 
         $context = context_system::instance();
-        if ($ignorelocked && isset($this->restrictedzones) && !has_capability('moodle/site:manageblocksinrestrictedzones', $context)) {
-            return array_diff_key($regions, array_flip($this->restrictedzones));
+        if ($ignorelocked && isset($this->restrictedregions) && !has_capability('moodle/site:manageblocksinrestrictedregions', $context)) {
+            return array_diff_key($regions, array_flip($this->restrictedregions));
         } else {
             return $regions;
         }
