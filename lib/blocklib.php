@@ -1117,6 +1117,15 @@ class block_manager {
         }
     }
 
+    protected function is_block_region_locked($block) {
+        $lockedregions = $this->get_lockedregions();
+        $inlockedregion = key_exists($block->instance->region, $lockedregions);
+        $context = context_system::instance();
+        $caneditrestricted = has_capability('moodle/site:manageblocksinrestrictedregions', $context);
+
+        return $inlockedregion && !$caneditrestricted;
+    }
+
 /// Process actions from the URL ===============================================
 
     /**
@@ -1136,12 +1145,11 @@ class block_manager {
             $blocktitle = $block->arialabel;
         }
 
-        $lockedregions = $this->get_lockedregions();
-        $inlockedregion = key_exists($block->instance->region, $lockedregions);
-        $context = context_system::instance();
-        $caneditrestricted = has_capability('moodle/site:manageblocksinrestrictedregions', $context);
+        if ($this->is_block_region_locked($block)) {
+            return $controls;
+        }
 
-        if ($this->page->user_can_edit_blocks() && !$block->instance->locked && (!$inlockedregion || $caneditrestricted)) {
+        if ($this->page->user_can_edit_blocks() && !$block->instance->locked) {
             // Move icon.
             $str = new lang_string('moveblock', 'block', $blocktitle);
             $controls[] = new action_menu_link_primary(
@@ -1296,7 +1304,7 @@ class block_manager {
 
         require_sesskey();
         $block = $this->page->blocks->find_instance($blockid);
-        if (!$this->user_can_delete_block($block)) {
+        if (!$this->user_can_delete_block($block) || $this->is_block_region_locked($block)) {
             throw new moodle_exception('nopermissions', '', $this->page->url->out(), get_string('deleteablock'));
         }
 
@@ -1386,7 +1394,7 @@ class block_manager {
 
         if (!$this->page->user_can_edit_blocks()) {
             throw new moodle_exception('nopermissions', '', $this->page->url->out(), get_string('hideshowblocks'));
-        } else if (!$block->instance_can_be_hidden()) {
+        } else if (!$block->instance_can_be_hidden() || $this->is_block_region_locked($block)) {
             return false;
         }
 

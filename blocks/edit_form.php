@@ -254,13 +254,13 @@ class block_edit_form extends moodleform {
             $mform->hardFreeze($pagefields);
         }
 
-        foreach ($pagefields as $field) {
-            $mform->disabledIf($field, 'bui_locked', 'eq', '1');
-        }
-
         if (isset($freezeregions)) {
             $mform->hardFreeze('bui_region');
             $mform->hardFreeze('bui_defaultregion');
+
+            foreach ($pagefields as $field) {
+                $mform->hardFreeze($field);
+            }
         }
 
         $this->add_action_buttons();
