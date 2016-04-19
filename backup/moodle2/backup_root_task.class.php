@@ -168,5 +168,14 @@ class backup_root_task extends backup_task {
         $competencies = new backup_competencies_setting();
         $competencies->set_ui(new backup_setting_ui_checkbox($competencies, get_string('rootsettingcompetencies', 'backup')));
         $this->add_setting($competencies);
+
+        // If importing content then ensure section visibility is set correctly.
+        if ($this->plan->get_mode() == backup::MODE_IMPORT) {
+            $createemptysections = new backup_generic_setting('createemptysections', base_setting::IS_BOOLEAN, true);
+            $createemptysections->set_ui(
+                new backup_setting_ui_checkbox($createemptysections, get_string('createemptysections', 'backup'))
+            );
+            $this->add_setting($createemptysections);
+        }
     }
 }

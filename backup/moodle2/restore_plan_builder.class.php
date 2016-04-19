@@ -30,6 +30,7 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/backup/moodle2/restore_root_task.class.php');
 require_once($CFG->dirroot . '/backup/moodle2/restore_course_task.class.php');
 require_once($CFG->dirroot . '/backup/moodle2/restore_section_task.class.php');
+require_once($CFG->dirroot . '/backup/moodle2/restore_sectionvisibility_task.class.php');
 require_once($CFG->dirroot . '/backup/moodle2/restore_activity_task.class.php');
 require_once($CFG->dirroot . '/backup/moodle2/restore_final_task.class.php');
 require_once($CFG->dirroot . '/backup/moodle2/restore_block_task.class.php');
@@ -212,6 +213,22 @@ abstract class restore_plan_builder {
         // For the given course, add as many section tasks as necessary
         foreach ($info->sections as $sectionid => $section) {
             self::build_section_plan($controller, $sectionid);
+        }
+
+        // If importing content then ensure section visibility is set correctly.
+        if ($info->mode == backup::MODE_IMPORT) {
+            $restoreactivitytasks = array();
+            $tasks = $plan->get_tasks();
+            foreach ($tasks as $task) {
+                if ($task instanceof restore_activity_task) {
+                    $restoreactivitytasks[] = $task;
+                }
+            }
+            if (!empty($restoreactivitytasks)) {
+                $plan->add_task(
+                    new restore_sectionvisibility_task('restore_sectionvisibility_task', $info, null, $restoreactivitytasks)
+                );
+            }
         }
     }
 }

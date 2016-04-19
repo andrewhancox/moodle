@@ -108,6 +108,7 @@ $string['coursecategory'] = 'Category the course will be restored into';
 $string['courseid'] = 'Original ID';
 $string['coursesettings'] = 'Course settings';
 $string['coursetitle'] = 'Title';
+$string['createemptysections'] = 'Create empty sections';
 $string['currentstage1'] = 'Initial settings';
 $string['currentstage2'] = 'Schema settings';
 $string['currentstage4'] = 'Confirmation and review';

@@ -1642,6 +1642,94 @@ class restore_section_structure_step extends restore_structure_step {
 }
 
 /**
+ * Execution step that will ensure that all imported activities are in
+ * visible sections.
+ */
+class restore_sectionvisibility_step extends restore_execution_step {
+    /**
+     * @var restore_activity_task[]
+     */
+    protected $restoreactivitytasks;
+
+    /**
+     * Constructor for restore_sectionvisibility_step.
+     *
+     * @param $name string
+     * @param $task restore_task
+     * @param $restoreactivitytasks restore_activity_task[]
+     */
+    public function __construct($name, $task, $restoreactivitytasks) {
+        $this->restoreactivitytasks = $restoreactivitytasks;
+        parent::__construct($name, $task);
+    }
+
+    /**
+     * Code to be executed.
+     */
+    protected function define_execution() {
+        $courseid = $this->get_courseid();
+        $courseformat = course_get_format($courseid);
+        $usessections = $courseformat->uses_sections();
+
+        if (!$usessections) {
+            return;
+        }
+
+        $info = $this->task->get_info();
+        $createemptysections = $info->root_settings['createemptysections'];
+
+        rebuild_course_cache($courseid);
+        $modinfo = get_fast_modinfo($courseid);
+        $formatoptions = $courseformat->get_format_options();
+
+        if (!isset($formatoptions['numsections'])) {
+            return;
+        }
+        $initialnumsections = $formatoptions['numsections'];
+
+        $maximportedsectionnumber = 0;
+        foreach ($this->restoreactivitytasks as $task) {
+            $cmid = $task->get_moduleid();
+
+            if (empty($cmid)) {
+                continue;
+            }
+
+            $cm = $modinfo->get_cm($cmid);
+            $sectionnum = $cm->sectionnum;
+            if ($sectionnum > $maximportedsectionnumber) {
+                $maximportedsectionnumber = $sectionnum;
+            }
+        }
+
+        if ($initialnumsections < $maximportedsectionnumber) {
+            $courseformat->update_course_format_options(array('numsections' => $maximportedsectionnumber));
+            course_create_sections_if_missing($courseid, range(0, $maximportedsectionnumber));
+        }
+
+        if ($initialnumsections <= $maximportedsectionnumber && !$createemptysections) {
+            rebuild_course_cache($courseid);
+            $modinfo = get_fast_modinfo($courseid);
+            $sections = $modinfo->get_section_info_all();
+            $sectionswithcms = $modinfo->get_sections();
+            $emptysectioncount = 0;
+
+            foreach ($sections as $sectionnum => $section) {
+                if ($sectionnum <= $initialnumsections) {
+                    continue;
+                }
+                if (key_exists($sectionnum, $sectionswithcms)) {
+                    continue;
+                }
+                move_section_to($modinfo->get_course(), $sectionnum - $emptysectioncount, $maximportedsectionnumber);
+                $emptysectioncount++;
+            }
+            $courseformat->update_course_format_options(array('numsections' => $maximportedsectionnumber - $emptysectioncount));
+        }
+    }
+}
+
+/**
  * Structure step that will read the course.xml file, loading it and performing
  * various actions depending of the site/restore settings. Note that target
  * course always exist before arriving here so this step will be updating
