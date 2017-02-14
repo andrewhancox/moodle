@@ -237,6 +237,9 @@ echo format_text($chaptertext, $chapter->contentformat, array('noclean'=>true, '
 
 echo $OUTPUT->box_end();
 
+echo $OUTPUT->tag_list(core_tag_tag::get_item_tags('mod_book', 'book_chapters', $chapter->id),
+    null, 'book-tags');
+
 if ($book->navstyle) {
     // Lower navigation.
     echo '<div class="navbottom clearfix ' . $navclasses[$book->navstyle] . '">' . $chnavigation . '</div>';

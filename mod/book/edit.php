@@ -75,9 +75,9 @@ if ($mform->is_cancelled()) {
         $DB->update_record('book_chapters', $data);
         $DB->set_field('book', 'revision', $book->revision+1, array('id'=>$book->id));
         $chapter = $DB->get_record('book_chapters', array('id' => $data->id));
+        core_tag_tag::set_item_tags('mod_book', 'book_chapters', $chapter->id, $context, $data->tags);
 
         \mod_book\event\chapter_updated::create_from_chapter($book, $context, $chapter)->trigger();
-
     } else {
         // adding new chapter
         $data->bookid        = $book->id;
@@ -101,6 +101,7 @@ if ($mform->is_cancelled()) {
         $DB->update_record('book_chapters', $data);
         $DB->set_field('book', 'revision', $book->revision+1, array('id'=>$book->id));
         $chapter = $DB->get_record('book_chapters', array('id' => $data->id));
+        core_tag_tag::set_item_tags('mod_book', 'book_chapters', $chapter->id, $context, $data->tags);
 
         \mod_book\event\chapter_created::create_from_chapter($book, $context, $chapter)->trigger();
     }
@@ -120,6 +121,9 @@ if ($chapters = book_preload_chapters($book)) {
 echo $OUTPUT->header();
 echo $OUTPUT->heading($book->name);
 
+$data = new StdClass();
+$data->tags = core_tag_tag::get_item_tags_array('mod_book', 'book_chapters', $chapter->id);
+$mform->set_data($data);
 $mform->display();
 
 echo $OUTPUT->footer();
