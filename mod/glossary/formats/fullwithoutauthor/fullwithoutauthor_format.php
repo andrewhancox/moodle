@@ -1,7 +1,7 @@
 <?php
 
 function glossary_show_entry_fullwithoutauthor($course, $cm, $glossary, $entry, $mode="", $hook="", $printicons=1, $aliases=true) {
-    global $CFG, $USER;
+    global $CFG, $USER, $OUTPUT;
 
 
     if ($entry) {
@@ -29,6 +29,8 @@ function glossary_show_entry_fullwithoutauthor($course, $cm, $glossary, $entry, 
 
         glossary_print_entry_definition($entry, $glossary, $cm);
         glossary_print_entry_attachment($entry, $cm, 'html');
+        echo $OUTPUT->tag_list(core_tag_tag::get_item_tags('mod_glossary', 'glossary_entries', $entry->id),
+            null, 'glossary-tags');
 
         echo '</td></tr>';
         echo '<tr valign="top"><td colspan="2" class="entrylowersection">';

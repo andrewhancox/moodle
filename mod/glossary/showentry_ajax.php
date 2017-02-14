@@ -71,7 +71,9 @@ if ($entries) {
         $options->para = false;
         $options->trusted = $entry->definitiontrust;
         $options->context = $context;
-        $entries[$key]->definition = format_text($definition, $entry->definitionformat, $options);
+        $entries[$key]->definition = format_text($definition, $entry->definitionformat, $options) .
+            $OUTPUT->tag_list(core_tag_tag::get_item_tags('mod_glossary', 'glossary_entries', $entry->id),
+                null, 'glossary-tags');
 
         $entries[$key]->attachments = '';
         if (!empty($entries[$key]->attachment)) {

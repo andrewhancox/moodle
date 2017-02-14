@@ -131,10 +131,6 @@ if ( $dp = $DB->get_record('glossary_formats', array('name'=>$glossary->displayf
     }
 }
 
-if ( $displayformat == -1 ) {
-     $displayformat = $glossary->displayformat;
-}
-
 if ( $show ) {
     $mode = 'term';
     $hook = $show;

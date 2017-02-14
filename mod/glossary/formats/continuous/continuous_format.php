@@ -2,7 +2,7 @@
 
 function glossary_show_entry_continuous($course, $cm, $glossary, $entry, $mode='', $hook='', $printicons=1, $aliases=false) {
 
-    global $USER;
+    global $USER, $OUTPUT;
 
     echo '<table class="glossarypost continuous" cellspacing="0">';
     echo '<tr valign="top">';
@@ -13,6 +13,8 @@ function glossary_show_entry_continuous($course, $cm, $glossary, $entry, $mode='
     echo '</div> ';
     glossary_print_entry_definition($entry, $glossary, $cm);
     glossary_print_entry_attachment($entry, $cm, 'html');
+    echo $OUTPUT->tag_list(core_tag_tag::get_item_tags('mod_glossary', 'glossary_entries', $entry->id),
+        null, 'glossary-tags');
     $entry->alias = '';
     echo '</td></tr>';
 
