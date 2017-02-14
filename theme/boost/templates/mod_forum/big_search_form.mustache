@@ -145,6 +145,19 @@
                 </td>
             </tr>
             <tr>
+                <td class="c0">
+                    <label for="tags">{{#str}}searchtags, forum{{/str}}</label>
+                </td>
+                <td class="c1">
+                    <select class="custom-select" name="tags[]"
+                            id="tags" multiple>
+                        {{#tagoptions}}
+                            <option value="{{value}}" {{#selected}}selected{{/selected}}>{{{text}}}</option>
+                        {{/tagoptions}}
+                    </select>
+                </td>
+            </tr>
+            <tr>
                 <td> </td>
                 <td class="submit">
                     <button type="submit" class="btn btn-primary">{{#str}}searchforums, forum{{/str}}</button>
@@ -154,7 +167,22 @@
     </form>
 </div>
 {{#js}}
-require(['jquery'], function($) {
+require(['jquery', 'core/form-autocomplete', 'core/str'], function($, module, str) {
+    str.get_strings([
+        {key: 'entertags', component: 'tag'},
+        {key: 'noselection', component: 'form'}
+    ]).done(function(strings) {
+        module.enhance(
+                "#tags",
+                1,
+                "",
+                strings[0],
+                0,
+                1,
+                strings[1]
+            );
+    });
+
     var toggleDateFields = function(prefix, disabled) {
         $('#searchform select[name^=' + prefix + ']').prop('disabled', disabled);
         $('#searchform input[name^=h' + prefix + ']').val(disabled ? 1 : 0);
