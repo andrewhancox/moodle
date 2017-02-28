@@ -198,6 +198,9 @@ if ($datarecord = data_submitted() and confirm_sesskey()) {
                 $field->update_content($rid, $datarecord->$fieldname, $fieldname);
             }
 
+            $tags = optional_param_array('tags', [], PARAM_TAGLIST);
+            core_tag_tag::set_item_tags('mod_data', 'data_records', $rid, $context, $tags);
+
             // Trigger an event for updating this record.
             $event = \mod_data\event\record_updated::create(array(
                 'objectid' => $rid,
@@ -249,6 +252,8 @@ if ($datarecord = data_submitted() and confirm_sesskey()) {
             foreach ($processeddata->fields as $fieldname => $field) {
                 $field->update_content($recordid, $datarecord->$fieldname, $fieldname);
             }
+
+            core_tag_tag::set_item_tags('mod_data', 'data_records', $recordid, $context, $datarecord);
 
             // Trigger an event for updating this record.
             $event = \mod_data\event\record_created::create(array(
@@ -340,6 +345,12 @@ if ($data->addtemplate){
         $patterns[] = "[[".$field->field->name."#id]]";
         $replacements[] = 'field_'.$field->field->id;
     }
+
+    if (core_tag_tag::is_enabled('mod_data', 'data_records')) {
+        $patterns[]     = "[[tags]]";
+        $replacements[] = data_generate_tag_form($recordid);
+    }
+
     $newtext = str_ireplace($patterns, $replacements, $data->{$mode});
 
 } else {    //if the add template is not yet defined, print the default form!
