@@ -169,22 +169,7 @@
     </form>
 </div>
 {{#js}}
-require(['jquery', 'core/form-autocomplete', 'core/str'], function($, module, str) {
-    str.get_strings([
-        {key: 'entertags', component: 'tag'},
-        {key: 'noselection', component: 'form'}
-    ]).done(function(strings) {
-        module.enhance(
-                "#tags",
-                1,
-                "",
-                strings[0],
-                0,
-                1,
-                strings[1]
-            );
-    });
-
+require(['jquery'], function($) {
     var toggleDateFields = function(prefix, disabled) {
         $('#searchform select[name^=' + prefix + ']').prop('disabled', disabled);
         $('#searchform input[name^=h' + prefix + ']').val(disabled ? 1 : 0);
