@@ -261,7 +261,7 @@ if ($mode != 'csstemplate' and $mode != 'jstemplate') {
         echo '</optgroup>';
         if (core_tag_tag::is_enabled('mod_data', 'data_records')) {
             echo '<optgroup label="'.get_string('other', 'data').'">';
-            echo '<option value="[[tags]]">' . get_string('tags') . ' - ##tags##</option>';
+            echo '<option value="##tags##">' . get_string('tags') . ' - ##tags##</option>';
             echo '</optgroup>';
         }
     }
