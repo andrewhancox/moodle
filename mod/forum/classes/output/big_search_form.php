@@ -184,11 +184,9 @@ class big_search_form implements renderable, templatable {
         $data->showfullwords = $this->showfullwords;
         $data->actionurl = $this->actionurl->out(false);
 
-        $showstandard = \core_tag_area::get_showstandard('mod_forum', 'forum_posts');
-        $showstandard = ($showstandard != \core_tag_tag::HIDE_STANDARD);
-
-        // Option 'tags' allows us to type new tags.
-        $typenewtags = ($showstandard != \core_tag_tag::STANDARD_ONLY);
+        $tagtypestoshow = \core_tag_area::get_showstandard('mod_forum', 'forum_posts');
+        $showstandard = ($tagtypestoshow != \core_tag_tag::HIDE_STANDARD);
+        $typenewtags = ($tagtypestoshow != \core_tag_tag::STANDARD_ONLY);
 
         $PAGE->requires->js_call_amd('core/form-autocomplete', 'enhance', $params = array('#tags', $typenewtags, '',
                               get_string('entertags', 'tag'), false, $showstandard, get_string('noselection', 'form')));
