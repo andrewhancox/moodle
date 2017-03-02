@@ -664,28 +664,33 @@ function data_generate_default_template(&$data, $template, $recordid=0, $form=fa
 function data_generate_tag_form($recordid) {
     global $CFG, $DB, $PAGE;
 
+    $tagtypestoshow = \core_tag_area::get_showstandard('mod_data', 'data_records');
+    $showstandard = ($tagtypestoshow != core_tag_tag::HIDE_STANDARD);
+    $typenewtags = ($tagtypestoshow != core_tag_tag::STANDARD_ONLY);
+
     $str = html_writer::start_tag('div', array('class' => 'datatagcontrol'));
 
     $namefield = empty($CFG->keeptagnamecase) ? 'name' : 'rawname';
-    $tags      = $DB->get_records('tag', array(
-        'isstandard' => 1,
-        'tagcollid'  => \core_tag_area::get_collection('mod_data', 'data_records')
-    ), $namefield, 'rawname,' . $namefield . ' as fieldname');
 
     $existingtags = core_tag_tag::get_item_tags_array('mod_data', 'data_records', $recordid);
 
+    if ($showstandard) {
+        $tags = $DB->get_records_menu('tag', array(
+            'isstandard' => 1,
+            'tagcollid'  => \core_tag_area::get_collection('mod_data', 'data_records')
+        ), $namefield, 'id,' . $namefield . ' as fieldname');
+
+        $tags = $existingtags + $tags;
+    } else {
+        $tags = $existingtags;
+    }
+
     $str .= '<select class="custom-select" name="tags[]" id="tags" multiple>';
-    foreach ($tags as $tag) {
-        $selected = in_array($tag->rawname, $existingtags) ? 'selected' : '';
-        $str .= "<option value='$tag->rawname' $selected>$tag->fieldname</option>";
+    foreach ($tags as $tagid => $tag) {
+        $selected = key_exists($tagid, $existingtags) ? 'selected' : '';
+        $str .= "<option value='$tag' $selected>$tag</option>";
     }
     $str .= '</select>';
-
-    $showstandard = \core_tag_area::get_showstandard('mod_data', 'records');
-    $showstandard = ($showstandard != core_tag_tag::HIDE_STANDARD);
-
-    // Option 'tags' allows us to type new tags.
-    $typenewtags = ($showstandard != core_tag_tag::STANDARD_ONLY);
 
     $PAGE->requires->js_call_amd('core/form-autocomplete', 'enhance', $params = array(
         '#tags',
