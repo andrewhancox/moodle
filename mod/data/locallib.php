@@ -765,8 +765,8 @@ function mod_data_get_tagged_records($tag, $exclusivemode = false, $fromctx = 0,
             $modinfo    = get_fast_modinfo($item->courseid);
             $cm         = $modinfo->get_cm($item->cmid);
             $pageurl    = new moodle_url('/mod/data/view.php', array(
-                'recordid' => $item->id,
-                'b'        => $item->dataid
+                'rid' => $item->id,
+                'd'        => $item->dataid
             ));
             $pagename   = get_string('entry', 'data');
             $pagename   = html_writer::link($pageurl, $pagename);
