@@ -42,7 +42,7 @@ class restore_data_activity_structure_step extends restore_activity_structure_st
             $paths[] = new restore_path_element('data_record', '/activity/data/records/record');
             $paths[] = new restore_path_element('data_content', '/activity/data/records/record/contents/content');
             $paths[] = new restore_path_element('data_rating', '/activity/data/records/record/ratings/rating');
-            $paths[] = new restore_path_element('book_tag', '/activity/data/records/record/tags/tag');
+            $paths[] = new restore_path_element('data_tag', '/activity/data/records/record/tags/tag');
         }
 
         // Return the paths wrapped into standard activity structure
