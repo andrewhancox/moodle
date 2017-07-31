@@ -3104,7 +3104,7 @@ function data_export_ods($export, $dataname, $count) {
  * @return array
  */
 function data_get_exportdata($dataid, $fields, $selectedfields, $currentgroup=0, $context=null,
-                             $userdetails=false, $time=false, $approval=false) {
+                             $userdetails=false, $time=false, $approval=false, $tags = false) {
     global $DB;
 
     if (is_null($context)) {
@@ -3135,6 +3135,9 @@ function data_get_exportdata($dataid, $fields, $selectedfields, $currentgroup=0,
     }
     if ($approval) {
         $exportdata[0][] = get_string('approved', 'data');
+    }
+    if ($tags) {
+        $exportdata[0][] = get_string('tags', 'data');
     }
 
     $datarecords = $DB->get_records('data_records', array('dataid'=>$dataid));
@@ -3170,6 +3173,10 @@ function data_get_exportdata($dataid, $fields, $selectedfields, $currentgroup=0,
             }
             if ($approval) { // Add approval status
                 $exportdata[$line][] = (int) $record->approved;
+            }
+            if ($tags) {
+                $itemtags = \core_tag_tag::get_item_tags_array('mod_data', 'data_records', $record->id);
+                $exportdata[$line][] = implode(', ', $itemtags);
             }
         }
         $line++;
