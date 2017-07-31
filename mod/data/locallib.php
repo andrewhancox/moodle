@@ -1299,10 +1299,14 @@ function data_build_search_array($data, $paging, $searcharray, $defaults = null,
         }
     }
 
-    $searcharray[DATA_TAGS] = new stdClass();
-    $searcharray[DATA_TAGS]->params = [];
-    $searcharray[DATA_TAGS]->rawtagnames = optional_param_array('tags', [], PARAM_TAGLIST);
-    $searcharray[DATA_TAGS]->sql    = '';
+    $rawtagnames = optional_param_array('tags', false, PARAM_TAGLIST);
+
+    if ($rawtagnames) {
+        $searcharray[DATA_TAGS]              = new stdClass();
+        $searcharray[DATA_TAGS]->params      = [];
+        $searcharray[DATA_TAGS]->rawtagnames = $rawtagnames;
+        $searcharray[DATA_TAGS]->sql         = '';
+    }
 
     if (!$paging) {
         // Name searching.
