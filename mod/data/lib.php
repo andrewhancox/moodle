@@ -626,7 +626,11 @@ function data_generate_default_template(&$data, $template, $recordid=0, $form=fa
 
         if (core_tag_tag::is_enabled('mod_data', 'data_records')) {
             $label = new html_table_cell(get_string('tags') . ':');
-            $cell = new html_table_cell('##tags##');
+            if ($form) {
+                $cell = data_generate_tag_form();
+            } else {
+                $cell = new html_table_cell('##tags##');
+            }
             $table->data[] = new html_table_row(array($label, $cell));
         }
 
@@ -1901,7 +1905,8 @@ function data_print_preference_form($data, $perpage, $search, $sort='', $order='
 
     if (core_tag_tag::is_enabled('mod_data', 'data_records')) {
         $patterns[]     = "/##tags##/";
-        $replacement[] = data_generate_tag_form(false, $search_array[DATA_TAGS]->rawtagnames);
+        $selectedtags = isset($search_array[DATA_TAGS]->rawtagnames) ? $search_array[DATA_TAGS]->rawtagnames : [];
+        $replacement[] = data_generate_tag_form(false, $selectedtags);
     }
 
     // actual replacement of the tags
