@@ -1058,6 +1058,9 @@ function data_search_entries($data, $cm, $context, $mode, $currentgroup, $search
         }
 
         if (!empty($advanced)) {                    // If advanced box is checked.
+            // IT WOULD APPEAR THAT THIS CODE IS REDUNDANT
+            // $advtables, $advwhere etc. are only used below when constructing $fromsql
+            // which is only used if advanced is empty.
             $i = 0;
             foreach ($searcharray as $key => $val) { // what does $searcharray hold?
                 if ($key == DATA_FIRSTNAME or $key == DATA_LASTNAME) {
@@ -1116,6 +1119,9 @@ function data_search_entries($data, $cm, $context, $mode, $currentgroup, $search
         }
         $i = 0;
         if (!empty($advanced)) {                      // If advanced box is checked.
+            // IT WOULD APPEAR THAT THIS CODE IS REDUNDANT
+            // $advtables, $advwhere etc. are only used below when constructing $fromsql
+            // which is only used if advanced is empty.
             foreach ($searcharray as $key => $val) {   // what does $searcharray hold?
                 if ($key == DATA_FIRSTNAME or $key == DATA_LASTNAME) {
                     $i++;
@@ -1294,6 +1300,11 @@ function data_build_search_array($data, $paging, $searcharray, $defaults = null,
             }
         }
     }
+
+    $searcharray[DATA_TAGS] = new stdClass();
+    $searcharray[DATA_TAGS]->params = [];
+    $searcharray[DATA_TAGS]->rawtagnames = optional_param_array('tags', [], PARAM_TAGLIST);
+    $searcharray[DATA_TAGS]->sql    = '';
 
     if (!$paging) {
         // Name searching.
