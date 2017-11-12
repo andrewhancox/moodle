@@ -15,16 +15,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Data module version information
+ * Database cache definitions.
  *
- * @package   mod_data
- * @copyright 2005 onwards Martin Dougiamas  {@link http://moodle.com}
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    mod_data
+ * @category   cache
+ * @copyright  2017 Andrew Hancox
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2017111400;       // The current module version (Date: YYYYMMDDXX)
-$plugin->requires  = 2017050500;       // Requires this Moodle version
-$plugin->component = 'mod_data';       // Full name of the plugin (used for diagnostics)
-$plugin->cron      = 0;
+$definitions = array(
+    'filteredtemplates' => array(
+        'mode' => cache_store::MODE_REQUEST,
+        'simplekeys' => false, // The course id or 0 for global.
+        'simpledata' => true,
+        'staticacceleration' => true,
+        'staticaccelerationsize' => 30,
+    ),
+);
