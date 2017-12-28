@@ -1593,21 +1593,16 @@ function data_filter_template($templatename, $template, $patterns, $context) {
             'noclean' => true,
     );
 
-    if ($CFG->debugdeveloper) {
-        $alltags = implode(', ', $patterns);
-
-        $alltagsfiltered = $filtermanager->filter_text($alltags, $context, $filteroptions);
-
-        foreach ($patterns as $pattern) {
-            if (strpos($alltagsfiltered, $pattern) === false) {
-                debugging('Collision between enabled filters and tag: ' . $pattern, DEBUG_DEVELOPER);
-            }
-        }
-    }
-
     $filteredtemplate = $cache->get($cachekey);
     if ($filteredtemplate === false) {
-        $filteredtemplate = $filtermanager->filter_text($template, $context, $filteroptions);
+        $protectedpatterns = [];
+        foreach ($patterns as $pattern) {
+            $protectedpatterns[$pattern] = md5($pattern);
+        }
+        $filteredtemplate = str_ireplace(array_keys($protectedpatterns), array_values($protectedpatterns), $template);
+        $filteredtemplate = $filtermanager->filter_text($filteredtemplate, $context, $filteroptions);
+        $filteredtemplate = str_ireplace(array_values($protectedpatterns), array_keys($protectedpatterns), $filteredtemplate);
+
         $cache->set($cachekey, $filteredtemplate);
     }
 
