@@ -15,16 +15,30 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Quiz responses report version information.
+ * Post-install script for the quiz responses report.
  *
  * @package   quiz_responses
- * @copyright 2011 Tim Hunt
+ * @copyright 2018 Andrew Hancox <andrewdchancox@googlemail.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version  = 2018051401;
-$plugin->requires = 2018050800;
-$plugin->component = 'quiz_responses';
+/**
+ * Quiz responses report upgrade code.
+ */
+function xmldb_quiz_responses_upgrade($oldversion) {
+    global $DB;
 
+    if ($oldversion < 2018051401) {
+        $updatesql = "UPDATE {quiz_reports}
+                             SET capability = :capabilityname
+                           WHERE name = :name AND capability IS NULL";
+        $params = ['capabilityname' => 'quiz/responses:view', 'name' => 'responses'];
+        $DB->execute($updatesql, $params);
+
+        upgrade_plugin_savepoint(true, 2018051401, 'quiz', 'responses');
+    }
+
+    return true;
+}

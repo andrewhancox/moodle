@@ -34,6 +34,7 @@ function xmldb_quiz_responses_install() {
     $record = new stdClass();
     $record->name         = 'responses';
     $record->displayorder = '9000';
+    $record->capability   = 'quiz/responses:view';
 
     $DB->insert_record('quiz_reports', $record);
 }

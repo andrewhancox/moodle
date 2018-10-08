@@ -15,16 +15,24 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Quiz responses report version information.
+ * Capability definitions for the quiz responses report.
  *
  * @package   quiz_responses
- * @copyright 2011 Tim Hunt
+ * @copyright 2018 Andrew Hancox <andrewdchancox@googlemail.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version  = 2018051401;
-$plugin->requires = 2018050800;
-$plugin->component = 'quiz_responses';
-
+$capabilities = array(
+    'quiz/responses:view' => array(
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes' => array(
+            'teacher' => CAP_ALLOW,
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW
+        ),
+        'clonepermissionsfrom' =>  'mod/quiz:viewreports'
+    )
+);
