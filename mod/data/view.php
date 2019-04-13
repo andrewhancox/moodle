@@ -419,7 +419,10 @@ if ($showactivity) {
 
         // Advanced search form doesn't make sense for single (redirects list view).
         if ($maxcount && $mode != 'single') {
+            print_collapsible_region_start('data-search-criteria', 'data-search-criteria', get_string('search:criteria', 'data'),
+                    'data-search-criteria', false);
             data_print_preference_form($data, $perpage, $search, $sort, $order, $search_array, $advanced, $mode);
+            print_collapsible_region_end();
         }
 
         if (empty($records)) {
