@@ -38,7 +38,7 @@ $token = optional_param('token', $token, PARAM_ALPHANUM);
 $PAGE->set_context(context_system::instance());
 $url = new moodle_url('/enrol/lti/tp.php');
 $PAGE->set_url($url);
-$PAGE->set_pagelayout('popup');
+$PAGE->set_pagelayout('embedded');
 $PAGE->set_title(get_string('registration', 'enrol_lti'));
 
 // Only show the proxy if the token parameter is correct.
