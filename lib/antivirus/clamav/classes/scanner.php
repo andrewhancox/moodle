@@ -184,6 +184,7 @@ class scanner extends \core\antivirus\scanner {
         $returncodes[64] = 'Can\'t write to temporary directory (please specify another one).';
         $returncodes[70] = 'Can\'t allocate and clear memory (calloc).';
         $returncodes[71] = 'Can\'t allocate memory (malloc).';
+        $returncodes[137] = 'Interrupted by signal 9: SIGKILL. Potential memory issue)';
         if (isset($returncodes[$returncode])) {
             return $returncodes[$returncode];
         }
