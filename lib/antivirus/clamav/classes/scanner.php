@@ -187,7 +187,7 @@ class scanner extends \core\antivirus\scanner {
         if (isset($returncodes[$returncode])) {
             return $returncodes[$returncode];
         }
-        return get_string('unknownerror', 'antivirus_clamav');
+        return get_string('unknownerror', 'antivirus_clamav', $returncode);
     }
 
     /**
