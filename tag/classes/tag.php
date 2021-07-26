@@ -146,7 +146,28 @@ class core_tag_tag {
         // Clean up a bit just in case the rules change again.
         $tagname = clean_param($tagname, PARAM_TAG);
 
+        
+        $tagname = self::apply_multilang_filter($tagname);
+
         return $ashtml ? htmlspecialchars($tagname) : $tagname;
+    }
+
+    private static $multilang2filter = null;
+    private static function apply_multilang_filter($tagname) {
+        global $CFG;
+
+        if (!isset(self::$multilang2filter)) {
+            if (filter_is_enabled('multilang2')) {
+                require_once("$CFG->dirroot/filter/multilang2/filter.php");
+                self::$multilang2filter = new filter_multilang2(context_system::instance(), array());
+            } else {
+                self::$multilang2filter = false;
+            }
+        }
+        if (self::$multilang2filter) {
+            $tagname = self::$multilang2filter->filter($tagname);
+        }
+        return $tagname;
     }
 
     /**
