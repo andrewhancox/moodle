@@ -467,7 +467,7 @@ class auth extends \auth_plugin_base {
                 redirect(new moodle_url('/login/index.php'));
             } else if ($mappeduser && ($mappeduser->confirmed || !$issuer->get('requireconfirmation'))) {
                 // Update user fields.
-                $userinfo = $this->update_user($userinfo, $mappeduser);
+                $userinfo = (array)$this->update_user($userinfo, $mappeduser);
                 $userwasmapped = true;
             } else {
                 // Trigger login failed event.
