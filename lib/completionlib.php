@@ -720,6 +720,13 @@ class completion_info {
                 /** @var activity_custom_completion $cmcompletion */
                 $cmcompletion = new $cmcompletionclass($cminfo, $userid, $completionstate);
                 $response = $cmcompletion->get_overall_completion_state() != COMPLETION_INCOMPLETE;
+
+                $customstate = $cmcompletion->get_overall_completion_state();
+                if ($customstate == COMPLETION_INCOMPLETE) {
+                    return $customstate;
+                }
+                $response = true;
+                $completionstate[] = $customstate;
             } else {
                 // Fallback to the get_completion_state callback.
                 $cmcompletionclass = "mod_{$cminfo->modname}\\completion\\custom_completion";
