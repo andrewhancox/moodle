@@ -262,6 +262,130 @@ final class lineitem_test extends \advanced_testcase {
     }
 
     /**
+     * Test that updating a line item dispatches the lineitemreceived hook.
+     */
+    public function test_execute_put_dispatches_lineitemreceived_hook(): void {
+        global $CFG;
+        require_once($CFG->dirroot . '/mod/lti/locallib.php');
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $resourceid = 'test-resource-id';
+        $tag = 'tag';
+        $course = $this->getDataGenerator()->create_course();
+        $typeid = $this->create_type();
+
+        $gbservice = new gradebookservices();
+        $gbservice->set_type(lti_get_type($typeid));
+        $this->create_graded_lti($typeid, $course, $resourceid, $tag);
+        $gradeitems = $gbservice->get_lineitems($course->id, null, null, null, null, null, $typeid);
+        $gradeitem = $gradeitems[1][0];
+        $lineitem = gradebookservices::item_for_json($gradeitem, '', $typeid);
+
+        $hooks = [];
+        $this->redirectHook(
+            \ltiservice_gradebookservices\hook\lineitemreceived::class,
+            function (\ltiservice_gradebookservices\hook\lineitemreceived $hook) use (&$hooks): void {
+                $hooks[] = $hook;
+            },
+        );
+
+        $this->set_server_for_put($course, $typeid, $lineitem);
+        $response = new \mod_lti\local\ltiservice\response();
+        $lineitem->resourceId = $resourceid . 'modified';
+        $lineitem->tag = $tag . 'modified';
+        $response->set_request_data(json_encode($lineitem));
+
+        (new lineitem($gbservice))->execute($response);
+
+        $this->assertCount(1, $hooks);
+        $hook = $hooks[0];
+        $this->assertEquals($gradeitem->id, $hook->grade_item->id);
+        $this->assertEquals($resourceid . 'modified', $hook->lineitem->resourceId);
+        $this->assertEquals($tag . 'modified', $hook->lineitem->tag);
+
+        // The hook receives the same line item that is returned to the tool.
+        $this->assertEquals(json_decode($response->get_body()), $hook->lineitem);
+    }
+
+    /**
+     * Test that posting a score dispatches the scorereceived hook, and that a rejected score does not.
+     */
+    public function test_score_post_dispatches_scorereceived_hook(): void {
+        global $CFG;
+        require_once($CFG->dirroot . '/mod/lti/locallib.php');
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course();
+        $typeid = $this->create_type();
+        $user = $this->getDataGenerator()->create_and_enrol($course);
+
+        $gbservice = new gradebookservices();
+        $gbservice->set_type(lti_get_type($typeid));
+        $this->create_graded_lti($typeid, $course, 'test-resource-id', 'tag');
+        $gradeitems = $gbservice->get_lineitems($course->id, null, null, null, null, null, $typeid);
+        $gradeitem = $gradeitems[1][0];
+
+        $hooks = [];
+        $this->redirectHook(
+            \ltiservice_gradebookservices\hook\scorereceived::class,
+            function (\ltiservice_gradebookservices\hook\scorereceived $hook) use (&$hooks): void {
+                $hooks[] = $hook;
+            },
+        );
+
+        $requestdata = [
+            'scoreGiven' => "8.0",
+            'scoreMaximum' => "10.0",
+            'activityProgress' => "Completed",
+            'timestamp' => "2024-08-07T18:54:36.736+00:00",
+            'gradingProgress' => "FullyGraded",
+            'userId' => $user->id,
+        ];
+        $response = $this->post_score($course, $typeid, $gradeitem->id, $requestdata);
+        $this->assertEquals(200, $response->get_code());
+
+        $this->assertCount(1, $hooks);
+        $hook = $hooks[0];
+        $this->assertEquals($gradeitem->id, $hook->grade_item->id);
+        $this->assertSame((int) $user->id, $hook->userid);
+        $this->assertEquals(8.0, $hook->score->scoreGiven);
+        $this->assertEquals(10.0, $hook->score->scoreMaximum);
+        $this->assertEquals('FullyGraded', $hook->score->gradingProgress);
+
+        // A score with an earlier timestamp is rejected, so the hook must not be dispatched again.
+        $requestdata['timestamp'] = "2024-08-06T18:54:36.736+00:00";
+        $response = $this->post_score($course, $typeid, $gradeitem->id, $requestdata);
+        $this->assertEquals(409, $response->get_code());
+        $this->assertCount(1, $hooks);
+    }
+
+    /**
+     * Posts a score to the scores endpoint of a line item.
+     *
+     * @param object $course course the line item belongs to.
+     * @param int $typeid Type ID of the LTI Tool.
+     * @param int $itemid grade item ID of the line item.
+     * @param array $requestdata the score to post.
+     * @return \mod_lti\local\ltiservice\response
+     */
+    private function post_score(object $course, int $typeid, int $itemid, array $requestdata): \mod_lti\local\ltiservice\response {
+        $gbservice = new gradebookservices();
+        $gbservice->set_type(lti_get_type($typeid));
+
+        $_SERVER['REQUEST_METHOD'] = \mod_lti\local\ltiservice\resource_base::HTTP_POST;
+        $_SERVER['PATH_INFO'] = "/$course->id/lineitems/{$itemid}/lineitem/scores?type_id=$typeid";
+        $token = lti_new_access_token($typeid, ['https://purl.imsglobal.org/spec/lti-ags/scope/score']);
+        $_SERVER['HTTP_Authorization'] = 'Bearer ' . $token->token;
+        $_GET['type_id'] = (string) $typeid;
+
+        $response = new \mod_lti\local\ltiservice\response();
+        $response->set_content_type('application/vnd.ims.lis.v1.score+json');
+        $response->set_request_data(json_encode($requestdata));
+        (new scores($gbservice))->execute($response);
+
+        return $response;
+    }
+
+    /**
      * Inserts a graded lti instance, which should create a grade_item and gradebookservices record.
      *
      * @param int $typeid Type ID of the LTI Tool.
