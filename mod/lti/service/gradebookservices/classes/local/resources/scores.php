@@ -204,6 +204,10 @@ class scores extends resource_base {
             }
         }
         $this->get_service()->save_grade_item($item, $score, $score->userId);
+
+        \core\di::get(\core\hook\manager::class)->dispatch(
+            new \ltiservice_gradebookservices\hook\scorereceived($score, $item, $score->userId)
+        );
     }
 
     /**

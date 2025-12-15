@@ -283,6 +283,11 @@ class lineitem extends resource_base {
             $id = "{$endpoint}?type_id={$typeid}";
             $json->id = $id;
         }
+
+        \core\di::get(\core\hook\manager::class)->dispatch(
+            new \ltiservice_gradebookservices\hook\lineitemreceived($json, $item)
+        );
+
         return json_encode($json, JSON_UNESCAPED_SLASHES);
 
     }
