@@ -177,6 +177,49 @@ final class lineitem_test extends \advanced_testcase {
     }
 
     /**
+     * @covers ::execute
+     *
+     * Test updating the line item with gradesReleased.
+     */
+    public function test_execute_put_gradesreleased(): void {
+        global $CFG;
+        require_once($CFG->dirroot . '/mod/lti/locallib.php');
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $resourceid = 'test-resource-id';
+        $tag = 'tag';
+        $course = $this->getDataGenerator()->create_course();
+        $typeid = $this->create_type();
+
+        $gbservice = new gradebookservices();
+        $gbservice->set_type(lti_get_type($typeid));
+        $lti = $this->create_graded_lti($typeid, $course, $resourceid, $tag);
+        $gradeitems = $gbservice->get_lineitems($course->id, null, null, null, null, null, $typeid);
+        $lineitem = gradebookservices::item_for_json($gradeitems[1][0], '', $typeid);
+
+        $lineitemresource = new lineitem($gbservice);
+
+        $this->set_server_for_put($course, $typeid, $lineitem);
+
+        $response = new \mod_lti\local\ltiservice\response();
+        $lineitem->resourceId = $resourceid.'modified';
+        $lineitem->tag = $tag.'modified';
+        $response->set_request_data(json_encode($lineitem));
+        $lineitemresource->execute($response);
+        $this->assertEquals(0, \grade_item::fetch(['itemmodule' => 'lti', 'iteminstance' => $lti->id])->get_hidden());
+
+        $lineitem->gradesReleased = false;
+        $response->set_request_data(json_encode($lineitem));
+        $lineitemresource->execute($response);
+        $this->assertEquals(1, \grade_item::fetch(['itemmodule' => 'lti', 'iteminstance' => $lti->id])->get_hidden());
+
+        $lineitem->gradesReleased = true;
+        $response->set_request_data(json_encode($lineitem));
+        $lineitemresource->execute($response);
+        $this->assertEquals(0, \grade_item::fetch(['itemmodule' => 'lti', 'iteminstance' => $lti->id])->get_hidden());
+    }
+
+    /**
      * Test running a series of score updates, highlighting problems with the score posting logic.
      *
      * @covers ::execute

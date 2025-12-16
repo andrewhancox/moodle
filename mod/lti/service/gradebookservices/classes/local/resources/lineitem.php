@@ -241,6 +241,14 @@ class lineitem extends resource_base {
                 }
             }
         }
+        if (isset($json->gradesReleased)) {
+            $gradesreleased = !empty($json->gradesReleased);
+            $gradeitemvisible = empty($item->get_hidden());
+            if ($gradesreleased !== $gradeitemvisible) {
+                $updategradeitem = true;
+                $item->set_hidden(!$gradesreleased, true);
+            }
+        }
         if ($updategradeitem) {
             if (!$item->update('mod/ltiservice_gradebookservices')) {
                 throw new \Exception(null, 500);
