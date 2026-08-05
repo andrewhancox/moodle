@@ -127,6 +127,9 @@ if ($code == PHPUNIT_EXITCODE_INSTALL) {
 }
 
 passthru("php util.php --buildconfig", $code);
+if ($code != 0) {
+    exit($code); // Propagate buildconfig failure.
+}
 
 echo "\n";
 echo "PHPUnit test environment setup complete.\n";
